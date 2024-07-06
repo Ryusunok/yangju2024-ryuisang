@@ -1,0 +1,12 @@
+FROM fluentd
+
+# 필요한 빌드 도구 설치
+USER root
+RUN apk add --no-cache --update \
+    build-base \
+    ruby-dev
+
+# MongoDB 플러그인 설치
+RUN fluent-gem install fluent-plugin-mongo -v 1.5.0
+
+USER fluent
