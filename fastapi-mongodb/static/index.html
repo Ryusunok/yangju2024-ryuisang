@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Authentication</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; }
+        form { display: flex; flex-direction: column; }
+        input, button { margin: 10px 0; padding: 5px; }
+        #message { margin-top: 20px; padding: 10px; background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>User Authentication</h1>
+    
+    <h2>Register</h2>
+    <form id="registerForm">
+        <input type="email" id="registerEmail" placeholder="Email" required>
+        <input type="password" id="registerPassword" placeholder="Password" required>
+        <button type="submit">Register</button>
+    </form>
+
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <h2>User Info</h2>
+    <button id="getUserInfo">Get User Info</button>
+
+    <h2>Logout</h2>
+    <button id="logout">Logout</button>
+
+    <div id="message"></div>
+
+    <script>
+        const API_URL = '';
+        let token = localStorage.getItem('token');
+
+        function showMessage(msg) {
+            document.getElementById('message').textContent = msg;
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            try {
+                const response = await axios.post(`${API_URL}/register`, { email, password });
+                showMessage(`Registered successfully: ${response.data.email}`);
+            } catch (error) {
+                showMessage(`Registration failed: ${error.response.data.detail}`);
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            try {
+                const response = await axios.post(`${API_URL}/login`, { email, password });
+                token = response.data.access_token;
+                localStorage.setItem('token', token);
+                showMessage('Logged in successfully');
+            } catch (error) {
+                showMessage(`Login failed: ${error.response.data.detail}`);
+            }
+        });
+
+        document.getElementById('getUserInfo').addEventListener('click', async () => {
+            if (!token) {
+                showMessage('Please login first');
+                return;
+            }
+            try {
+                const response = await axios.get(`${API_URL}/me`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                showMessage(`Current user: ${response.data.email}`);
+            } catch (error) {
+                showMessage(`Failed to get user info: ${error.response.data.detail}`);
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', async () => {
+            if (!token) {
+                showMessage('No user is logged in');
+                return;
+            }
+            try {
+                await axios.post(`${API_URL}/logout`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                localStorage.removeItem('token');
+                token = null;
+                showMessage('Logged out successfully');
+            } catch (error) {
+                showMessage(`Logout failed: ${error.response.data.detail}`);
+            }
+        });
+    </script>
+</body>
+</html>
